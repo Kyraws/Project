@@ -28,8 +28,8 @@ public class InitDatabase {
         Statement statement = connection.createStatement();
         createTables(connection);
 
-//        insertSampleCustomers(connection);
-//        insertSampleVehicles(connection);
+        insertSampleCustomers(connection);
+        insertSampleVehicles(connection);
         statement.close();
 
     }
@@ -40,11 +40,11 @@ public class InitDatabase {
 
             // Creating Vehicle table
             String createVehicleTable = "CREATE TABLE IF NOT EXISTS Vehicle (" +
-                    "vehicle_id INT PRIMARY KEY," +
+                    "vehicle_id INT PRIMARY KEY AUTO_INCREMENT," +
                     "brand VARCHAR(255) NOT NULL," +
                     "model VARCHAR(255) NOT NULL," +
                     "color VARCHAR(255) NOT NULL," +
-                    "range_in_kms INT NOT NULL," +
+                    "range_in_km INT NOT NULL," +
                     "registration_number VARCHAR(255) UNIQUE," +
                     "category VARCHAR(50) NOT NULL," +
                     "status VARCHAR(20) CHECK (status IN ('Available', 'Rented', 'Damaged', 'Being Repaired'))" +
@@ -97,7 +97,7 @@ public class InitDatabase {
                     "name VARCHAR(100) NOT NULL," +
                     "address VARCHAR(255) NOT NULL," +
                     "date_of_birth DATE NOT NULL," +
-                    "driver_license VARCHAR(255)," +
+                    "driver_license VARCHAR(255) UNIQUE," +
                     "card_details VARCHAR(100)" +
                     ")";
             statement.executeUpdate(createCustomerTable);
@@ -110,9 +110,9 @@ public class InitDatabase {
                     "rent_duration INT NOT NULL," +
                     "total_cost DECIMAL(10,2) NOT NULL," +
                     "driver_license VARCHAR(255)," +
+//                    "FOREIGN KEY(driver_license) REFERENCES Customer(driver_license), " +
                     "FOREIGN KEY(customer_id) REFERENCES Customer(customer_id)," +
-                    "FOREIGN KEY(vehicle_id) REFERENCES Vehicle(vehicle_id), " +
-                    "FOREIGN KEY(driver_license) REFERENCES Customer(driver_license) " +
+                    "FOREIGN KEY(vehicle_id) REFERENCES Vehicle(vehicle_id) " +
                     ")";
             statement.executeUpdate(createRentTable);
 
@@ -149,11 +149,11 @@ public class InitDatabase {
         }
     }
 
-    public static void RegisterCar(String brand, String model, String color, int range_or_mileage, double cost, String type, int passenger_number, Connection connection) {
-        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_or_mileage, cost) " +
-                "VALUES (NULL, ?, ?, ?, ?, ?)";
-        String sql2 = "INSERT INTO Car (vehicle_id, type, passenger_number) " +
-                "VALUES (LAST_INSERT_ID(), ?, ?)";
+    public static void RegisterCar(String brand, String model, String color, int range_in_km, String registration_number, String type, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
+                "VALUES (NULL, ?, ?, ?, ?, ?,?,?)";
+        String sql2 = "INSERT INTO Car (vehicle_id, type, passenger_number,daily_rental_cost, insurance_cost) " +
+                "VALUES (LAST_INSERT_ID(), ?, ?,?,?)";
 
         try {
             PreparedStatement VehicleStatement = connection.prepareStatement(sql);
@@ -162,10 +162,15 @@ public class InitDatabase {
             VehicleStatement.setString(1, brand);
             VehicleStatement.setString(2, model);
             VehicleStatement.setString(3, color);
-            VehicleStatement.setInt(4, range_or_mileage);
-            VehicleStatement.setDouble(5, cost);
+            VehicleStatement.setInt(4, range_in_km);
+            VehicleStatement.setString(5, registration_number);
+            VehicleStatement.setString(6, "Car");
+            VehicleStatement.setString(7, "Available");
+
             CarStatement.setString(1, type);
             CarStatement.setInt(2, passenger_number);
+            CarStatement.setInt(3, daily_rental_cost);
+            CarStatement.setInt(4, insurance_cost);
 
             // Execute the update
             VehicleStatement.executeUpdate();
@@ -174,13 +179,14 @@ public class InitDatabase {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
     }
 
-    public static void RegisterMotorcycle(String brand, String model, String color, int range_or_mileage, double cost, Connection connection) {
-        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_or_mileage, cost) " +
-                "VALUES (NULL, ?, ?, ?, ?, ?)";
-        String sql2 = "INSERT INTO Motorcycle (vehicle_id) " +
-                "VALUES (LAST_INSERT_ID())";
+    public static void RegisterMotorcycle(String brand, String model, String color, int range_in_km, String registration_number, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
+                "VALUES (NULL, ?, ?, ?, ?, ?,?,?)";
+        String sql2 = "INSERT INTO Motorcycle (vehicle_id,daily_rental_cost, insurance_cost) " +
+                "VALUES (LAST_INSERT_ID(), ?, ?)";
 
         try {
             PreparedStatement VehicleStatement = connection.prepareStatement(sql);
@@ -189,8 +195,15 @@ public class InitDatabase {
             VehicleStatement.setString(1, brand);
             VehicleStatement.setString(2, model);
             VehicleStatement.setString(3, color);
-            VehicleStatement.setInt(4, range_or_mileage);
-            VehicleStatement.setDouble(5, cost);
+            VehicleStatement.setInt(4, range_in_km);
+            VehicleStatement.setString(5, registration_number);
+            VehicleStatement.setString(6, "Motorcycle");
+            VehicleStatement.setString(7, "Available");
+
+
+            MotorcycleStatement.setInt(1, daily_rental_cost);
+            MotorcycleStatement.setInt(2, insurance_cost);
+
 
             // Execute the update
             VehicleStatement.executeUpdate();
@@ -201,11 +214,11 @@ public class InitDatabase {
         }
     }
 
-    public static void RegisterBike(String brand, String model, String color, int range_or_mileage, double cost, String bike_id, Connection connection) {
-        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_or_mileage, cost) " +
-                "VALUES (NULL, ?, ?, ?, ?, ?)";
-        String sql2 = "INSERT INTO Bike (vehicle_id, bike_id) " +
-                "VALUES (LAST_INSERT_ID(), ?)";
+    public static void RegisterBike(String brand, String model, String color, int range_in_km, String registration_number, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
+                "VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)";
+        String sql2 = "INSERT INTO Bike (vehicle_id,daily_rental_cost, insurance_cost) " +
+                "VALUES (LAST_INSERT_ID(), ?, ?)";
 
         try {
             PreparedStatement VehicleStatement = connection.prepareStatement(sql);
@@ -214,10 +227,14 @@ public class InitDatabase {
             VehicleStatement.setString(1, brand);
             VehicleStatement.setString(2, model);
             VehicleStatement.setString(3, color);
-            VehicleStatement.setInt(4, range_or_mileage);
-            VehicleStatement.setDouble(5, cost);
+            VehicleStatement.setInt(4, range_in_km);
+            VehicleStatement.setString(5, registration_number);
+            VehicleStatement.setString(6, "Bike");
+            VehicleStatement.setString(7, "Available");
 
-            BikeStatement.setString(1, bike_id);
+
+            BikeStatement.setInt(1, daily_rental_cost);
+            BikeStatement.setInt(2, insurance_cost);
 
             // Execute the update
             VehicleStatement.executeUpdate();
@@ -228,11 +245,11 @@ public class InitDatabase {
         }
     }
 
-    public static void RegisterScooter(String brand, String model, String color, int range_or_mileage, double cost, String scooter_id, Connection connection) {
-        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_or_mileage, cost) " +
-                "VALUES (NULL, ?, ?, ?, ?, ?)";
-        String sql2 = "INSERT INTO Scooter (vehicle_id, scooter_id) " +
-                "VALUES (LAST_INSERT_ID(), ?)";
+    public static void RegisterScooter(String brand, String model, String color, int range_in_km, String registration_number, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+        String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
+                "VALUES (NULL, ?, ?, ?, ?, ?,?,?)";
+        String sql2 = "INSERT INTO Scooter (vehicle_id,daily_rental_cost, insurance_cost) " +
+                "VALUES (LAST_INSERT_ID(), ?, ?)";
 
         try {
             PreparedStatement VehicleStatement = connection.prepareStatement(sql);
@@ -241,10 +258,14 @@ public class InitDatabase {
             VehicleStatement.setString(1, brand);
             VehicleStatement.setString(2, model);
             VehicleStatement.setString(3, color);
-            VehicleStatement.setInt(4, range_or_mileage);
-            VehicleStatement.setDouble(5, cost);
+            VehicleStatement.setInt(4, range_in_km);
+            VehicleStatement.setString(5, registration_number);
+            VehicleStatement.setString(6, "Scooter");
+            VehicleStatement.setString(7, "Available");
 
-            ScooterStatement.setString(1, scooter_id);
+
+            ScooterStatement.setInt(1, daily_rental_cost);
+            ScooterStatement.setInt(2, insurance_cost);
 
             // Execute the update
             VehicleStatement.executeUpdate();
@@ -256,8 +277,8 @@ public class InitDatabase {
     }
 
     public static void insertSampleCustomers(Connection connection) {
-        RegisterCustomer("Orestis", "Ntilinta", "2000-05-15", "DL12345", "1234-5678-9012-3456", connection);
-        RegisterCustomer("John Doe", "123 Main St", "1990-05-15", "DL12345", "1234-5678-9012-3456", connection);
+        RegisterCustomer("Orestis", "Ntilinta", "2000-05-15", "DL1", "1234-5678-9012-3456", connection);
+        RegisterCustomer("John Doe", "123 Main St", "1990-05-15", "DL2", "1234-5678-9012-3456", connection);
         RegisterCustomer("Alice Smith", "456 Elm St", "1985-09-20", null, "9876-5432-1098-7654", connection);
 
     }
@@ -265,10 +286,10 @@ public class InitDatabase {
     public static void insertSampleVehicles(Connection connection) {
         try {
             Statement statement = connection.createStatement();
-            RegisterCar("ToyotA", "Corolla", "Black", 50000, 250.00, "Sedan", 5, connection);
-            RegisterBike("BMX", "BMX", "Black", 50000, 250.00, "BMX123", connection);
-            RegisterMotorcycle("BMW", "BMW", "Black", 50000, 250.00, connection);
-            RegisterScooter("Scooter", "Scooter", "Black", 50000, 250.00, "Scooter123", connection);
+            RegisterCar("Toyota", "Prius", "Blue", 100, "ABC1", "Sedan", 5, 50, 10, connection);
+            RegisterBike("Shi", "Motren", "Red", 100, "ABC2", 1, 50, 10, connection);
+            RegisterMotorcycle("Honda", "CBR", "Red", 100, "ABC3", 1, 50, 10, connection);
+            RegisterScooter("Kymco", "Agility", "Red", 100, "ABC4", 1, 50, 10, connection);
 
 
             System.out.println("Sample vehicles inserted successfully!");
@@ -279,7 +300,7 @@ public class InitDatabase {
     }
 
 
-    public static List<String> searchAvailableCars(String category,Connection connection) {
+    public static List<String> searchAvailableCars(String category, Connection connection) {
         List<String> availableCars = new ArrayList<String>();
         String sql = "SELECT v.brand, v.model, v.color, v.range_or_mileage, v.cost, c.type, c.passenger_number " +
                 "FROM Vehicle v " +
@@ -287,7 +308,7 @@ public class InitDatabase {
                 "WHERE c.type = ?";
 
         try {
-             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
             // Set value for the placeholder in the SQL query
             preparedStatement.setString(1, category);
