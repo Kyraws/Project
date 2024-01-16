@@ -11,16 +11,21 @@ public class InitDatabase {
     public static void main(String[] args) throws Exception {
         System.out.println("Hello World!");
         InitDatabase init = new InitDatabase();
+        init.createDatabase();
         init.initDatabase();
 
     }
+    private void createDatabase() throws Exception {
+        Connection connection = getInitialConnection();
+        Statement statement = connection.createStatement();
+        statement.execute("CREATE DATABASE IF NOT EXISTS EVOL");
+        statement.close();
+    }
 
     private void initDatabase() throws Exception {
-        Connection connection = getInitialConnection();
-        connection = getConnection();
+        Connection connection = getConnection();
         Statement statement = connection.createStatement();
-//        statement.execute("CREATE DATABASE EVOL");
-//    createTables(connection);
+    createTables(connection);
 
     insertSampleCustomers(connection);
     insertSampleVehicles(connection);
@@ -34,7 +39,7 @@ public class InitDatabase {
 
             // Creating Vehicle table
             String createVehicleTable = "CREATE TABLE IF NOT EXISTS Vehicle (" +
-                    "vehicle_id INT PRI MARY KEY AUTO_INCREMENT," +
+                    "vehicle_id INT PRIMARY KEY AUTO_INCREMENT," +
                     "brand VARCHAR(50) NOT NULL," +
                     "model VARCHAR(50) NOT NULL," +
                     "color VARCHAR(20) NOT NULL," +
@@ -120,23 +125,9 @@ public class InitDatabase {
 
     public static void insertSampleCustomers(Connection connection) {
         RegisterUser("Orestis","Ntilinta","2000-05-15","DL12345","1234-5678-9012-3456",connection);
-//        try {
-//            Statement statement = connection.createStatement();
-//
-//            // Inserting sample customer data into the Customer table
-//            String insertCustomer1 = "INSERT INTO Customer (name, address, date_of_birth, driver_license, card_details) " +
-//                    "VALUES ('John Doe', '123 Main St', '1990-05-15', 'DL12345', '1234-5678-9012-3456')";
-//            String insertCustomer2 = "INSERT INTO Customer (name, address, date_of_birth, driver_license, card_details) " +
-//                    "VALUES ('Alice Smith', '456 Elm St', '1985-09-20', NULL, '9876-5432-1098-7654')";
-//
-//            statement.executeUpdate(insertCustomer1);
-//            statement.executeUpdate(insertCustomer2);
+        RegisterUser("John Doe","123 Main St","1990-05-15","DL12345","1234-5678-9012-3456",connection);
+        RegisterUser("Alice Smith","456 Elm St","1985-09-20",null,"9876-5432-1098-7654",connection);
 
-//            System.out.println("Sample customers inserted successfully!");
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
     }
 
     public static void insertSampleVehicles(Connection connection) {
@@ -145,10 +136,12 @@ public class InitDatabase {
 
             // Inserting sample vehicle data into the Vehicle table
             String insertVehicle1 = "INSERT INTO Vehicle (brand, model, color, range_or_mileage, cost) VALUES ('Toyota', 'Corolla', 'Black', 50000, 250.00)";
+            //Insert also to car table
+            String insertCar1 = "INSERT INTO Car (vehicle_id, type, passenger_number) VALUES (1, 'Sedan', 5)";
             String insertVehicle2 = "INSERT INTO Vehicle (brand, model, color, range_or_mileage, cost) VALUES ('Honda', 'Civic', 'Red', 60000, 300.00)";
 
             statement.executeUpdate(insertVehicle1);
-            statement.executeUpdate(insertVehicle2);
+            statement.executeUpdate(insertCar1);
 
             System.out.println("Sample vehicles inserted successfully!");
 
