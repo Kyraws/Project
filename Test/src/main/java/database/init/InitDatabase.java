@@ -47,7 +47,7 @@ public class InitDatabase {
                     "range_in_km INT NOT NULL," +
                     "registration_number VARCHAR(255) UNIQUE," +
                     "category VARCHAR(50) NOT NULL," +
-                    "status VARCHAR(20) CHECK (status IN ('Available', 'Rented', 'Damaged', 'Being Repaired'))" +
+                    "status ENUM('Available', 'Rented', 'Damaged', 'Being Repaired')" +
                     ")";
             statement.executeUpdate(createVehicleTable);
 
@@ -106,11 +106,13 @@ public class InitDatabase {
                     "rent_id INT PRIMARY KEY AUTO_INCREMENT," +
                     "customer_id INT NOT NULL," +
                     "vehicle_id INT NOT NULL," +
-                    "date_of_rent DATE NOT NULL," +
+                    "date_of_rent DATETIME NOT NULL," +
+                    "date_of_return DATETIME NOT NULL," +
                     "rent_duration INT NOT NULL," +
                     "total_cost DECIMAL(10,2) NOT NULL," +
-                    "driver_license VARCHAR(255)," +
-//                    "FOREIGN KEY(driver_license) REFERENCES Customer(driver_license), " +
+                    "driver_license VARCHAR(255) UNIQUE," +
+                    "status ENUM('Active', 'Completed', 'Cancelled')," +
+                    "FOREIGN KEY(driver_license) REFERENCES Customer(driver_license), " +
                     "FOREIGN KEY(customer_id) REFERENCES Customer(customer_id)," +
                     "FOREIGN KEY(vehicle_id) REFERENCES Vehicle(vehicle_id) " +
                     ")";
@@ -143,10 +145,7 @@ public class InitDatabase {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        {
 
-
-        }
     }
 
     public static void RegisterCar(String brand, String model, String color, int range_in_km, String registration_number, String type, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
@@ -182,7 +181,7 @@ public class InitDatabase {
 
     }
 
-    public static void RegisterMotorcycle(String brand, String model, String color, int range_in_km, String registration_number, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+    public static void RegisterMotorcycle(String brand, String model, String color, int range_in_km, String registration_number, int daily_rental_cost, int insurance_cost, Connection connection) {
         String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
                 "VALUES (NULL, ?, ?, ?, ?, ?,?,?)";
         String sql2 = "INSERT INTO Motorcycle (vehicle_id,daily_rental_cost, insurance_cost) " +
@@ -214,7 +213,7 @@ public class InitDatabase {
         }
     }
 
-    public static void RegisterBike(String brand, String model, String color, int range_in_km, String registration_number, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+    public static void RegisterBike(String brand, String model, String color, int range_in_km, String registration_number, int daily_rental_cost, int insurance_cost, Connection connection) {
         String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
                 "VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)";
         String sql2 = "INSERT INTO Bike (vehicle_id,daily_rental_cost, insurance_cost) " +
@@ -245,7 +244,7 @@ public class InitDatabase {
         }
     }
 
-    public static void RegisterScooter(String brand, String model, String color, int range_in_km, String registration_number, int passenger_number, int daily_rental_cost, int insurance_cost, Connection connection) {
+    public static void RegisterScooter(String brand, String model, String color, int range_in_km, String registration_number, int daily_rental_cost, int insurance_cost, Connection connection) {
         String sql = "INSERT INTO Vehicle (vehicle_id, brand, model, color, range_in_km, registration_number,category,status) " +
                 "VALUES (NULL, ?, ?, ?, ?, ?,?,?)";
         String sql2 = "INSERT INTO Scooter (vehicle_id,daily_rental_cost, insurance_cost) " +
@@ -284,56 +283,16 @@ public class InitDatabase {
     }
 
     public static void insertSampleVehicles(Connection connection) {
-        try {
-            Statement statement = connection.createStatement();
-            RegisterCar("Toyota", "Prius", "Blue", 100, "ABC1", "Sedan", 5, 50, 10, connection);
-            RegisterBike("Shi", "Motren", "Red", 100, "ABC2", 1, 50, 10, connection);
-            RegisterMotorcycle("Honda", "CBR", "Red", 100, "ABC3", 1, 50, 10, connection);
-            RegisterScooter("Kymco", "Agility", "Red", 100, "ABC4", 1, 50, 10, connection);
 
+        RegisterCar("Toyota", "Prius", "Blue", 100, "ABC1", "Sedan", 5, 50, 10, connection);
+        RegisterBike("Shi", "Motren", "Red", 100, "ABC2", 1, 50, connection);
+        RegisterMotorcycle("Honda", "CBR", "Red", 100, "ABC3", 1, 50, connection);
+        RegisterScooter("Kymco", "Agility", "Red", 100, "ABC4", 1, 50, connection);
 
-            System.out.println("Sample vehicles inserted successfully!");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Sample vehicles inserted successfully!");
     }
 
 
-    public static List<String> searchAvailableCars(String category, Connection connection) {
-        List<String> availableCars = new ArrayList<String>();
-        String sql = "SELECT v.brand, v.model, v.color, v.range_or_mileage, v.cost, c.type, c.passenger_number " +
-                "FROM Vehicle v " +
-                "JOIN Car c ON v.vehicle_id = c.vehicle_id " +
-                "WHERE c.type = ?";
 
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
-            // Set value for the placeholder in the SQL query
-            preparedStatement.setString(1, category);
-
-            // Execute the query
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            // Process the result set
-            while (resultSet.next()) {
-                String carDetails = String.format("Brand: %s, Model: %s, Color: %s, Range/Mileage: %d, Cost: %.2f, Type: %s, Passenger Number: %d",
-                        resultSet.getString("brand"),
-                        resultSet.getString("model"),
-                        resultSet.getString("color"),
-                        resultSet.getInt("range_or_mileage"),
-                        resultSet.getDouble("cost"),
-                        resultSet.getString("type"),
-                        resultSet.getInt("passenger_number"));
-
-                availableCars.add(carDetails);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace(); // Handle the exception based on your application's error handling strategy
-        }
-
-        return availableCars;
-    }
 }
