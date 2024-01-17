@@ -37,10 +37,8 @@ public class VehicleRentalSystem {
         }
 
         try(Connection connection = getConnection()){
-            returnRentedVehicle(connection, 10, rentalEndDate); //Edw 8a exei allo rentalID oxi hardcoded
+            returnRentedVehicle(connection, 11, rentalEndDate); //Edw 8a exei allo rentalID oxi hardcoded
             System.out.println("Vehicle returned successfully!");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -182,7 +180,7 @@ public class VehicleRentalSystem {
                         "WHEN v.category = 'Bike' THEN b.insurance_cost " +
                         "WHEN v.category = 'Scooter' THEN s.insurance_cost " +
                         "WHEN v.category = 'Motorcycle' THEN m.insurance_cost " +
-                        "ELSE NULL END" +
+                        " END" +
                         ", 0)) AS total_cost " +
                         "FROM Vehicle v " +
                         "LEFT JOIN Car c ON v.vehicle_id = c.vehicle_id " +
@@ -223,7 +221,7 @@ public class VehicleRentalSystem {
 
     private static void returnRentedVehicle(Connection connection, int rentalId, String returnTime) throws SQLException {
         // Using a prepared statement to avoid SQL injection
-        String updateRentQuery = "UPDATE Rent SET total_cost =?,  status = ? WHERE rent_id = ?";
+        String updateRentQuery = "UPDATE Rent SET total_cost =?,date_of_return = ?,  status = ? WHERE rent_id = ?";
         String selectRentQuery = "SELECT rent_duration,vehicle_id, date_of_rent,date_of_return, total_cost FROM Rent WHERE rent_id = ?";
 
         try (PreparedStatement selectStatement = connection.prepareStatement(selectRentQuery);
@@ -235,16 +233,17 @@ public class VehicleRentalSystem {
                 if (resultSet.next()) {
                     int rentDuration = resultSet.getInt("rent_duration");
                     String rentalStartDate = resultSet.getString("date_of_rent");
-                    String rentalEndDate = resultSet.getString("date_of_return");
+//                    String rentalEndDate = returnTime;
                     double totalCost = resultSet.getDouble("total_cost");
 
                     // Calculate additional charges for late return
-                    double additionalCharges = calculateAdditionalCharges(rentalStartDate, rentalEndDate, rentDuration);
+                    double additionalCharges = calculateAdditionalCharges(rentalStartDate, returnTime, rentDuration);
 
                     // Update return time, status, and total cost in Rent table
                     updateStatement.setDouble(1, totalCost + additionalCharges);
-                    updateStatement.setString(2, "Completed");
-                    updateStatement.setInt(3, rentalId);
+                    updateStatement.setString(2, returnTime);
+                    updateStatement.setString(3, "Completed");
+                    updateStatement.setInt(4, rentalId);
 
                     updateStatement.executeUpdate();
                     updateVehicleStatus(connection, resultSet.getInt("vehicle_id"), "Available");
@@ -284,12 +283,6 @@ public class VehicleRentalSystem {
         }
     }
 
-    private static void chargeAdditionalFees(Connection connection, int rentalId, double additionalCharges) throws SQLException {
-        // Implement logic to charge additional fees to the customer's credit card
-        // This could involve updating the Customer table or another table related to customer payments
-        // Here, we'll just print a message as an example
-        System.out.println("Charging additional fees to the customer's credit card: $" + additionalCharges);
-    }
 
 
     private static void updateVehicleStatus(Connection connection, int vehicleId, String newStatus) throws
