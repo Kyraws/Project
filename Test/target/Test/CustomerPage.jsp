@@ -17,5 +17,9 @@
     <input type="submit" value="Rent">
 </form>
 
+<form action="Return.jsp">
+    <input type="submit" value="Return">
+</form>
+
 </body>
 </html>

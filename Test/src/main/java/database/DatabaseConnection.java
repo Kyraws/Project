@@ -1,9 +1,7 @@
 package database;
 
-
 import com.google.gson.JsonObject;
 import java.sql.*;
-
 
 public class DatabaseConnection {
     private static final String url = "jdbc:mysql://localhost";

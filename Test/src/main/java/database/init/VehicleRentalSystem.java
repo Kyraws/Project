@@ -78,9 +78,9 @@ public class VehicleRentalSystem {
 
     }
 
-    private static void recordVehicleRental(Connection connection, int customerId, int vehicleId,
-                                            String rentalStartDate, String rentalEndDate,
-                                            String DriverLicense, boolean insurance) throws SQLException {
+    public static void recordVehicleRental(Connection connection, int customerId, int vehicleId,
+                                           String rentalStartDate, String rentalEndDate,
+                                           String DriverLicense, boolean insurance) throws SQLException {
 
         Map<String, String> vehicleDetails = fetchVehicleDetails(connection, vehicleId);
         //1. range_in_km 2.color 3.registration_number 4.model 5.category 6.vehicle_id 7.brand 8.status
@@ -254,7 +254,7 @@ public class VehicleRentalSystem {
         }
     }
 
-    private static void returnRentedVehicle(Connection connection, int rentalId, String returnTime) throws SQLException {
+    public static void returnRentedVehicle(Connection connection, int rentalId, String returnTime) throws SQLException {
         // Using a prepared statement to avoid SQL injection
         String updateRentQuery = "UPDATE Rent SET total_cost =?,date_of_return = ?,  status = ? WHERE rent_id = ?";
         String selectRentQuery = "SELECT rent_duration,vehicle_id, date_of_rent,date_of_return, total_cost FROM Rent WHERE rent_id = ?";
