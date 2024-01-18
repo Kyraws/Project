@@ -23,40 +23,40 @@ public class VehicleRentalSystem {
 
         String DriverLicense = "DL2"; // Set to the driver's license if applicable
 
-//        try (Connection connection = getConnection()) {
-//            // Record the vehicle rental
-//            recordVehicleRental(connection, customerId, vehicleId, rentalStartDate, rentalEndDate, DriverLicense, true);
-//
-//
-//            System.out.println("Vehicle rental recorded successfully!");
-//
-//        } catch (Exception e) {
-//
-//            e.printStackTrace();
-//        }
-//
-//        try (Connection connection = getConnection()) {
-//            // Record the vehicle rental
-//            recordVehicleRental(connection, customerId - 1, vehicleId + 1, rentalStartDate, rentalEndDate, "DL1", false);
-//
-//
-//            System.out.println("Vehicle rental recorded successfully!");
-//
-//        } catch (Exception e) {
-//
-//            e.printStackTrace();
-//        }
+        try (Connection connection = getConnection()) {
+            // Record the vehicle rental
+            recordVehicleRental(connection, customerId, vehicleId, rentalStartDate, rentalEndDate, DriverLicense, true);
 
-//        try (Connection connection = getConnection()) {
-//            // Record the vehicle rental
-//            reportDamageAndRepair(connection, 1, "Damaged");
-//
-//            System.out.println("Vehicle rental recorded successfully!");
-//
-//        } catch (Exception e) {
-//
-//            e.printStackTrace();
-//        }
+
+            System.out.println("Vehicle rental recorded successfully!");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        try (Connection connection = getConnection()) {
+            // Record the vehicle rental
+            recordVehicleRental(connection, customerId - 1, vehicleId + 1, rentalStartDate, rentalEndDate, "DL1", false);
+
+
+            System.out.println("Vehicle rental recorded successfully!");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        try (Connection connection = getConnection()) {
+            // Record the vehicle rental
+            reportDamageAndRepair(connection, 1, "Damaged");
+
+            System.out.println("Vehicle rental recorded successfully!");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
 
         try (Connection connection = getConnection()) {
             // Record the vehicle rental
