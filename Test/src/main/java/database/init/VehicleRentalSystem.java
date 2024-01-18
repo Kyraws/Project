@@ -21,13 +21,46 @@ public class VehicleRentalSystem {
         String rentalStartDate = "2022-01-01 00:00:00";
         String rentalEndDate = "2022-01-10 00:00:00";
 
-        // Simulated rental duration and designated driver license
-//        int rentalDuration = 3;
         String DriverLicense = "DL2"; // Set to the driver's license if applicable
+
+//        try (Connection connection = getConnection()) {
+//            // Record the vehicle rental
+//            recordVehicleRental(connection, customerId, vehicleId, rentalStartDate, rentalEndDate, DriverLicense, true);
+//
+//
+//            System.out.println("Vehicle rental recorded successfully!");
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//        }
+//
+//        try (Connection connection = getConnection()) {
+//            // Record the vehicle rental
+//            recordVehicleRental(connection, customerId - 1, vehicleId + 1, rentalStartDate, rentalEndDate, "DL1", false);
+//
+//
+//            System.out.println("Vehicle rental recorded successfully!");
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//        }
+
+//        try (Connection connection = getConnection()) {
+//            // Record the vehicle rental
+//            reportDamageAndRepair(connection, 1, "Damaged");
+//
+//            System.out.println("Vehicle rental recorded successfully!");
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//        }
 
         try (Connection connection = getConnection()) {
             // Record the vehicle rental
-            recordVehicleRental(connection, customerId, vehicleId, rentalStartDate, rentalEndDate, DriverLicense, true);
+            reportDamageAndRepair(connection, 2, "Damaged");
 
             System.out.println("Vehicle rental recorded successfully!");
 
@@ -36,18 +69,18 @@ public class VehicleRentalSystem {
             e.printStackTrace();
         }
 
-        try(Connection connection = getConnection()){
-            returnRentedVehicle(connection, 11, rentalEndDate); //Edw 8a exei allo rentalID oxi hardcoded
-            System.out.println("Vehicle returned successfully!");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+//        try (Connection connection = getConnection()) {
+//            returnRentedVehicle(connection, 12, rentalEndDate); //Edw 8a exei allo rentalID oxi hardcoded
+//            System.out.println("Vehicle returned successfully!");
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
 
     }
 
     private static void recordVehicleRental(Connection connection, int customerId, int vehicleId,
                                             String rentalStartDate, String rentalEndDate,
-                                            String DriverLicense, boolean includeInsurance) throws SQLException {
+                                            String DriverLicense, boolean insurance) throws SQLException {
 
         Map<String, String> vehicleDetails = fetchVehicleDetails(connection, vehicleId);
         //1. range_in_km 2.color 3.registration_number 4.model 5.category 6.vehicle_id 7.brand 8.status
@@ -66,15 +99,15 @@ public class VehicleRentalSystem {
         if (ageAndLicenseCheck) {
 
             // Using a prepared statement to avoid SQL injection
-            String insertRentQuery = "INSERT INTO Rent (customer_id, vehicle_id, date_of_rent, date_of_return,rent_duration, total_cost, driver_license, status) " +
-                    "VALUES (?, ?, ?, ?,?, ?, ?, 'Active')";
+            String insertRentQuery = "INSERT INTO Rent (customer_id, vehicle_id, date_of_rent, date_of_return,rent_duration,insurance, total_cost, driver_license, status) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active')";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(insertRentQuery)) {
                 // Calculate rent duration in days
                 int rentDuration = calculateRentDuration(rentalStartDate, rentalEndDate);
 
                 // Fetch daily_rental_cost from the respective vehicle type table based on vehicle_id
-                double rentCost = fetchDailyRentalCost(connection, vehicleId, includeInsurance);
+                double rentCost = fetchDailyRentalCost(connection, vehicleId, insurance);
 
                 // Calculate total cost based on daily rental cost and rental duration
                 double totalCost = rentCost * rentDuration;
@@ -85,8 +118,9 @@ public class VehicleRentalSystem {
                 preparedStatement.setString(3, rentalStartDate);
                 preparedStatement.setString(4, rentalEndDate);
                 preparedStatement.setInt(5, rentDuration);
-                preparedStatement.setDouble(6, totalCost);
-                preparedStatement.setString(7, DriverLicense);
+                preparedStatement.setBoolean(6, insurance);
+                preparedStatement.setDouble(7, totalCost);
+                preparedStatement.setString(8, DriverLicense);
 
                 preparedStatement.executeUpdate();
 
@@ -107,6 +141,7 @@ public class VehicleRentalSystem {
     public static Map<String, String> fetchCustomerDetails(Connection connection, int customerId) throws SQLException {
         // Fetch all customer details from the customer_id
         String selectCustomerQuery = "SELECT * FROM Customer WHERE customer_id = ?";
+
         return getStringStringMap(connection, customerId, selectCustomerQuery);
     }
 
@@ -129,9 +164,9 @@ public class VehicleRentalSystem {
                         // Store column metadata in the map
                         map.put(columnName, columnValue);
                     }
-//                    for (Map.Entry<String, String> entry : map.entrySet()) {
-//                        System.out.println("Column Name: " + entry.getKey() + ", Column Value: " + entry.getValue());
-//                    }
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        System.out.println("Column Name: " + entry.getKey() + ", Column Value: " + entry.getValue());
+                    }
                 }
                 return map;
 
@@ -248,9 +283,6 @@ public class VehicleRentalSystem {
                     updateStatement.executeUpdate();
                     updateVehicleStatus(connection, resultSet.getInt("vehicle_id"), "Available");
 
-                    // Charge additional fees to the customer's credit card
-//                    chargeAdditionalFees(connection, rentalId, additionalCharges);
-
                     System.out.println("Vehicle returned successfully!");
                     System.out.println("Additional charges: $" + additionalCharges);
 
@@ -284,7 +316,6 @@ public class VehicleRentalSystem {
     }
 
 
-
     private static void updateVehicleStatus(Connection connection, int vehicleId, String newStatus) throws
             SQLException {
         // Using a prepared statement to avoid SQL injection
@@ -295,6 +326,119 @@ public class VehicleRentalSystem {
             preparedStatement.setInt(2, vehicleId);
 
             preparedStatement.executeUpdate();
+        }
+    }
+
+    public static void reportDamageAndRepair(Connection connection, int rentId, String flag) {
+
+        // Check if the rent exists and retrieve the vehicle details
+        String checkRentQuery = "SELECT Rent.vehicle_id, Rent.insurance,Rent.total_cost ,Vehicle.category FROM Rent JOIN Vehicle ON Rent.vehicle_id = Vehicle.vehicle_id WHERE rent_id = ?";
+
+        try (PreparedStatement checkRentStatement = connection.prepareStatement(checkRentQuery)) {
+            checkRentStatement.setInt(1, rentId);
+
+            // Execute the query and retrieve the result
+            try (ResultSet resultSet = checkRentStatement.executeQuery()) {
+                // Check if the result set is not empty
+                if (resultSet.next()) {
+                    // Extract vehicle_id and category from the result
+                    int damagedVehicleId = resultSet.getInt("vehicle_id");
+                    String category = resultSet.getString("category");
+                    boolean insurance = resultSet.getBoolean("insurance");
+                    double totalCost = resultSet.getDouble("total_cost");
+
+                    System.out.println("insurance: " + insurance);
+                    System.out.println("flag: " + flag);
+                    System.out.println("rentId: " + rentId);
+
+                    if (flag.equals("Maintenance") || (flag.equals("Damaged") && insurance)) {
+                        System.out.println("Insurance Brother.");
+                        int newVehicleId = getFirstAvailableVehicleWithCategory(category, connection);
+
+                        // Assign a new vehicle of the same category to the rent
+                        if (newVehicleId != -1) {
+                            String assignNewVehicleQuery = "UPDATE Rent SET vehicle_id = ? WHERE rent_id = ?";
+                            try (PreparedStatement assignNewVehicleStatement = connection.prepareStatement(assignNewVehicleQuery)) {
+                                assignNewVehicleStatement.setInt(1, newVehicleId);
+                                assignNewVehicleStatement.setInt(2, rentId);
+                                updateVehicleStatus(connection, newVehicleId, "Rented");
+
+                                // Execute the query to assign the new vehicle
+                                int rowsAffected = assignNewVehicleStatement.executeUpdate();
+                                if (rowsAffected > 0) {
+                                    // Successfully assigned new vehicle, now register for repair
+                                    registerVehicleForRepair(damagedVehicleId, category, flag, connection);
+                                } else {
+                                    // Handle the case where no rows were affected (e.g., invalid rentId)
+                                    System.out.println("No rows affected. Invalid rentId?");
+                                }
+                            }
+                        } else {
+                            System.out.println("No available vehicle with the same category found.");
+                        }
+                    } else {
+                        System.out.println("No Insurance Brother.");
+                        String updateTotalCostQuery = "UPDATE Rent SET total_cost = ?, status = 'Completed' WHERE rent_id = ?";
+                        try (PreparedStatement updateTotalCostStatement = connection.prepareStatement(updateTotalCostQuery)) {
+                            updateTotalCostStatement.setDouble(1, totalCost * 3);
+                            updateTotalCostStatement.setInt(2, rentId);
+
+                             updateTotalCostStatement.executeUpdate();
+                        }
+                    }
+                } else {
+                    // Handle the case where the rentId does not exist or the result set is empty
+                    System.out.println("Rent not found or empty result set.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace(); // Handle the exception appropriately in a real-world scenario
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private static int getFirstAvailableVehicleWithCategory(String category, Connection connection) throws SQLException {
+        String query = "SELECT vehicle_id FROM Vehicle WHERE status = 'Available' AND category = ? ORDER BY vehicle_id LIMIT 1";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, category);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("vehicle_id");
+                }
+            }
+        }
+
+        // Return a default value or handle the case when no available vehicle with the same category is found
+        return -1;
+    }
+
+    // Method to register a vehicle for repair
+    private static void registerVehicleForRepair(int vehicleId, String category, String flag, Connection connection) throws
+            SQLException {
+        System.out.println(vehicleId + " " + category + " " + flag);
+        // Assuming you have a method to insert repair details into the Repair table
+        String registerRepairQuery;
+
+        if (flag.equals("Maintenance")) {
+            registerRepairQuery = "INSERT INTO Repair (vehicle_id, date_of_enter,date_of_exit, cost, status) VALUES (?, NOW(),DATE_ADD(NOW(), INTERVAL 1 DAY), ?, 'Maintenance')";
+        } else {
+            registerRepairQuery = "INSERT INTO Repair (vehicle_id, date_of_enter,date_of_exit, cost, status) VALUES (?, NOW(),DATE_ADD(NOW(), INTERVAL 3 DAY), ?, 'Damaged')";
+        }
+        try (PreparedStatement registerRepairStatement = connection.prepareStatement(registerRepairQuery)) {
+            registerRepairStatement.setInt(1, vehicleId);
+            // You may set the cost based on your logic
+            registerRepairStatement.setInt(2, 10);
+
+            updateVehicleStatus(connection, vehicleId, "Damaged");
+
+            // Execute the query to register the vehicle for repair
+            // (Handle the result and implement error checking based on your needs)
+            registerRepairStatement.executeUpdate();
         }
     }
 }

@@ -1,8 +1,7 @@
 package database.init;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+
 
 import static database.DatabaseConnection.getConnection;
 import static database.DatabaseConnection.getInitialConnection;
@@ -38,6 +37,8 @@ public class InitDatabase {
         try {
             Statement statement = connection.createStatement();
 
+
+
             // Creating Vehicle table
             String createVehicleTable = "CREATE TABLE IF NOT EXISTS Vehicle (" +
                     "vehicle_id INT PRIMARY KEY AUTO_INCREMENT," +
@@ -47,7 +48,7 @@ public class InitDatabase {
                     "range_in_km INT NOT NULL," +
                     "registration_number VARCHAR(255) UNIQUE," +
                     "category VARCHAR(50) NOT NULL," +
-                    "status ENUM('Available', 'Rented', 'Damaged', 'Being Repaired')" +
+                    "status ENUM('Available', 'Rented', 'Damaged','Maintenance')" +
                     ")";
             statement.executeUpdate(createVehicleTable);
 
@@ -110,6 +111,7 @@ public class InitDatabase {
                     "date_of_return DATETIME NOT NULL," +
                     "rent_duration INT NOT NULL," +
                     "total_cost DECIMAL(10,2) NOT NULL," +
+                    "insurance BOOLEAN NOT NULL," +
                     "driver_license VARCHAR(255) UNIQUE," +
                     "status ENUM('Active', 'Completed', 'Cancelled')," +
                     "FOREIGN KEY(driver_license) REFERENCES Customer(driver_license), " +
@@ -118,11 +120,43 @@ public class InitDatabase {
                     ")";
             statement.executeUpdate(createRentTable);
 
+            String createRepairTable = "CREATE TABLE IF NOT EXISTS Repair (" +
+                    "repair_id INT PRIMARY KEY AUTO_INCREMENT," +
+                    "vehicle_id INT NOT NULL," +
+                    "date_of_enter DATETIME NOT NULL," +
+                    "date_of_exit DATETIME NOT NULL," +
+                    "cost DECIMAL(10,2) NOT NULL," +
+                    "status ENUM( 'Damaged', 'Being Repaired', 'Maintenance')," +
+                    "FOREIGN KEY (vehicle_id) REFERENCES Vehicle(vehicle_id)" +
+                    ")";
+            statement.executeUpdate(createRepairTable);
 
             System.out.println("Tables created successfully!");
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void RegisterRepair(int vehicle_id, String date_of_enter, String date_of_exit, int cost, String status, Connection connection) {
+        String sql = "INSERT INTO Repair (repair_id, vehicle_id, date_of_enter, date_of_exit, cost, status) " +
+                "VALUES (NULL, ?, ?, ?, ?, ?)";
+
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            // Set values for the placeholders
+            preparedStatement.setInt(1, vehicle_id);
+            preparedStatement.setString(2, date_of_enter);
+            preparedStatement.setString(3, date_of_exit);
+            preparedStatement.setInt(4, cost);
+            preparedStatement.setString(5, status);
+
+            // Execute the update
+            preparedStatement.executeUpdate();
+            System.out.println("Repair Registered Successfully");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static void RegisterCustomer(String name, String address, String date_of_birth, String driver_license, String card_details, Connection connection) {
@@ -288,6 +322,7 @@ public class InitDatabase {
         RegisterBike("Shi", "Motren", "Red", 100, "ABC2", 1, 50, connection);
         RegisterMotorcycle("Honda", "CBR", "Red", 100, "ABC3", 1, 50, connection);
         RegisterScooter("Kymco", "Agility", "Red", 100, "ABC4", 1, 50, connection);
+        RegisterCar("BMW", "Prius", "Blue", 100, "ABC5", "Sedan", 5, 50, 10, connection);
 
         System.out.println("Sample vehicles inserted successfully!");
     }
