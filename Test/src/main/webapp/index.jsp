@@ -9,11 +9,11 @@
 
 <h1>Welcome to the Website</h1>
 
-<form action="CustomerPage.jsp">
+<form action="Customer/CustomerPage.jsp">
     <input type="submit" value="Customer">
 </form>
 
-<form action="AdminPage.jsp">
+<form action="Admin/AdminPage.jsp">
     <input type="submit" value="Admin">
 </form>
 

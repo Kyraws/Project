@@ -1,7 +1,8 @@
 package database.init;
 
 import java.sql.*;
-
+import java.util.HashMap;
+import java.util.Map;
 
 import static database.DatabaseConnection.getConnection;
 import static database.DatabaseConnection.getInitialConnection;
@@ -36,7 +37,6 @@ public class InitDatabase {
     public static void createTables(Connection connection) {
         try {
             Statement statement = connection.createStatement();
-
 
 
             // Creating Vehicle table
@@ -112,11 +112,12 @@ public class InitDatabase {
                     "rent_duration INT NOT NULL," +
                     "total_cost DECIMAL(10,2) NOT NULL," +
                     "insurance BOOLEAN NOT NULL," +
-                    "driver_license VARCHAR(255) UNIQUE," +
+                    "driver_license VARCHAR(255)," +
                     "status ENUM('Active', 'Completed', 'Cancelled')," +
-                    "FOREIGN KEY(driver_license) REFERENCES Customer(driver_license), " +
                     "FOREIGN KEY(customer_id) REFERENCES Customer(customer_id)," +
-                    "FOREIGN KEY(vehicle_id) REFERENCES Vehicle(vehicle_id) " +
+                    "FOREIGN KEY(vehicle_id) REFERENCES Vehicle(vehicle_id), " +
+                    "UNIQUE(status,vehicle_id)," +
+                    "UNIQUE(status, driver_license)" +
                     ")";
             statement.executeUpdate(createRentTable);
 
@@ -328,6 +329,92 @@ public class InitDatabase {
     }
 
 
+//    private static Map<String, String> getStringAvailableRented(Connection connection, String query) throws SQLException {
+//        return getStringStringMap(connection, query);
+//    }
+//
+//    private static Map<String, String> getStringMap(Connection connection, String query) throws SQLException {
+//        return getStringStringMap(connection, query);
+//    }
+
+    private static Map<String, String> getStringStringMap(Connection connection, String query) throws SQLException {
+        Map<String, String> map = new HashMap<>();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    ResultSetMetaData metaData = resultSet.getMetaData();
+
+                    int columnCount = metaData.getColumnCount();
+
+                    for (int i = 1; i <= columnCount; i++) {
+                        String columnName = metaData.getColumnName(i);
+                        String columnValue = resultSet.getString(i);
+                        map.put(columnName, columnValue);
+                    }
+
+                    System.out.print(map.get("category") + " ");
+                    System.out.print(map.get("brand") + " ");
+                    System.out.print(map.get("model") + " ");
+                    System.out.print(map.get("color") + " ");
+                    System.out.print(map.get("range_in_km") + " ");
+                    System.out.print(map.get("registration_number"));
+
+
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                    System.out.println();
+                }
+                return map;
+
+            }
+        }
+    }
+
+    public static Map<String, String> searchAvailableVehicles() throws SQLException {
+        Connection connection = null;
+        try {
+            connection = getConnection();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String searchQuery = "SELECT *\n" +
+                "FROM vehicle\n" +
+                "WHERE status = 'available'\n" +
+                "ORDER BY\n" +
+                "  CASE category\n" +
+                "    WHEN 'CAR' THEN 1\n" +
+                "    WHEN 'MOTORCYCLE' THEN 2\n" +
+                "    WHEN 'BIKE' THEN 3\n" +
+                "    -- Add more categories as needed\n" +
+                "    ELSE 4 -- Default order for unknown categories\n" +
+                "  END;\n";
+
+        return getStringStringMap(connection, searchQuery);
+    }
+
+    public static Map<String, String> availableRentedVehicles() throws SQLException {
+        Connection connection = null;
+        try {
+            connection = getConnection();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String query = "-- All available vehicles\n" +
+                "SELECT \n" +
+                "FROM vehicle\n" +
+                "WHERE status = 'available'\n" +
+                "\n" +
+                "UNION ALL\n" +
+                "\n" +
+                "-- All rented vehicles\n" +
+                "SELECT\n" +
+                "FROM vehicle\n" +
+                "WHERE status = 'rented';\n";
+        return getStringStringMap(connection, query);
+    }
 
 
 }

@@ -17,8 +17,16 @@
     <input type="submit" value="Rent">
 </form>
 
+<form action="Search.jsp">
+    <input type="submit" value="Search">
+</form>
+
 <form action="Return.jsp">
     <input type="submit" value="Return">
+</form>
+
+<form action="Damage.jsp">
+    <input type="submit" value="Damage">
 </form>
 
 </body>

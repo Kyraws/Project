@@ -52,6 +52,7 @@
 %>
 
 <form method="post" action="Return.jsp">
+    <%--@declare id="rentalid"--%>
     <label for="rentalId">Rental ID:</label>
     <input type="number" name="rentalId" required><br>
 
@@ -59,7 +60,8 @@
     <% DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); %>
 
     <!-- Display the current time -->
-    <p>Current Time: <%= LocalDateTime.now().format(formatter) %></p>
+    <p>Current Time: <%= LocalDateTime.now().format(formatter) %>
+    </p>
 
     <!-- Use a hidden input field to submit the current time along with the form -->
     <input type="hidden" name="returnTime" value="<%= LocalDateTime.now().format(formatter) %>">

@@ -91,9 +91,10 @@ public class VehicleRentalSystem {
 
         // Check age and driver's license requirements
         boolean ageAndLicenseCheck;
-        if (DriverLicense == null)
+        if (DriverLicense == null) {
             ageAndLicenseCheck = checkAgeAndLicenseRequirements(vehicleDetails.get("category"), customerDetails.get("date_of_birth"), customerDetails.get("driver_license"));
-        else
+            DriverLicense = customerDetails.get("driver_license");
+        }else
             ageAndLicenseCheck = checkAgeAndLicenseRequirements(vehicleDetails.get("category"), customerDetails.get("date_of_birth"), DriverLicense);
 
         if (ageAndLicenseCheck) {
@@ -379,11 +380,14 @@ public class VehicleRentalSystem {
                     } else {
                         System.out.println("No Insurance Brother.");
                         String updateTotalCostQuery = "UPDATE Rent SET total_cost = ?, status = 'Completed' WHERE rent_id = ?";
+                        updateVehicleStatus(connection, damagedVehicleId, "Damaged");
                         try (PreparedStatement updateTotalCostStatement = connection.prepareStatement(updateTotalCostQuery)) {
                             updateTotalCostStatement.setDouble(1, totalCost * 3);
                             updateTotalCostStatement.setInt(2, rentId);
 
-                             updateTotalCostStatement.executeUpdate();
+                            updateTotalCostStatement.executeUpdate();
+
+                            registerVehicleForRepair(damagedVehicleId, category, flag, connection);
                         }
                     }
                 } else {
